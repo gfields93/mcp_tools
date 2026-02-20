@@ -57,9 +57,13 @@ def run_query(
         with get_connection() as conn:
             with conn.cursor() as cur:
                 cur.execute(query.sql_text, bind_dict)
-                cols = [col[0] for col in cur.description]
-                effective_limit = min(max_rows, settings.hard_max_rows)
-                rows = cur.fetchmany(effective_limit)
+                # description is None for DML statements (no result set)
+                if cur.description:
+                    cols = [col[0] for col in cur.description]
+                    effective_limit = min(max_rows, settings.hard_max_rows)
+                    rows = cur.fetchmany(effective_limit)
+                else:
+                    cols, rows = [], []
                 row_count = len(rows)
                 return [dict(zip(cols, row)) for row in rows]
     except Exception as exc:
