@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+dist/
+build/
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Environment / secrets
+.env
+
+# Test / coverage artefacts
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Editor
+.vscode/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Audit log
+audit.log
+audit.log.*
+
+# Windows alternate data streams
+*.Zone.Identifier
