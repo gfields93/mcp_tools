@@ -71,7 +71,6 @@ class TestFetchQuery:
             "desc": "A test query",
             "sql_text": "SELECT * FROM t WHERE id = :id",
             "params": json.dumps([{"name": "id", "type": "NUMBER"}]),
-            "query_type": "SELECT",
             "version": 2,
             "tags": "finance,orders",
         }
@@ -82,7 +81,6 @@ class TestFetchQuery:
             defaults["desc"],
             defaults["sql_text"],
             defaults["params"],
-            defaults["query_type"],
             defaults["version"],
             defaults["tags"],
         )
@@ -101,7 +99,6 @@ class TestFetchQuery:
         assert result.description == "A test query"
         assert result.sql_text == "SELECT * FROM t WHERE id = :id"
         assert result.parameters == [{"name": "id", "type": "NUMBER"}]
-        assert result.query_type == "SELECT"
         assert result.version == 2
         assert result.tags == "finance,orders"
 
@@ -140,11 +137,6 @@ class TestFetchQuery:
             result = fetch_query("my_query")
         assert result.tags is None
 
-    def test_dml_query_type_preserved(self):
-        cur = _make_cursor(fetchone=self._row(query_type="DML"))
-        with patch("db.registry.get_connection", return_value=_make_conn(cur)):
-            result = fetch_query("my_query")
-        assert result.query_type == "DML"
 
 
 # ---------------------------------------------------------------------------

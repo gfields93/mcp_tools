@@ -112,7 +112,6 @@ CREATE TABLE query_registry (
     description TEXT    NOT NULL,
     sql_text    TEXT    NOT NULL,
     parameters  TEXT,
-    query_type  TEXT    DEFAULT 'SELECT',
     version     INTEGER DEFAULT 1 NOT NULL,
     is_active   INTEGER DEFAULT 1,
     tags        TEXT
@@ -151,7 +150,7 @@ _REGISTRY_ROWS = [
         "Fetch one employee by primary key",
         "SELECT id, name, department FROM employees WHERE id = :id",
         json.dumps([{"name": "id", "type": "NUMBER", "required": True}]),
-        "SELECT", 1, 1, "hr,employees",
+        1, 1, "hr,employees",
     ),
     (
         "list_by_department",
@@ -165,31 +164,21 @@ _REGISTRY_ROWS = [
                 "allowed_values": ["Engineering", "Finance"],
             }
         ]),
-        "SELECT", 1, 1, "hr,employees",
+        1, 1, "hr,employees",
     ),
     (
         "list_all_employees",
         "Return every employee — no parameters required",
         "SELECT id, name, department FROM employees ORDER BY id",
         None,
-        "SELECT", 1, 1, "hr",
-    ),
-    (
-        "update_department",
-        "Move an employee to a new department",
-        "UPDATE employees SET department = :department WHERE id = :id",
-        json.dumps([
-            {"name": "id",         "type": "NUMBER",   "required": True},
-            {"name": "department", "type": "VARCHAR2", "required": True},
-        ]),
-        "DML", 1, 1, "hr",
+        1, 1, "hr",
     ),
     (
         "inactive_query",
         "Retired query — should never be visible",
         "SELECT 1",
         None,
-        "SELECT", 1, 0, None,
+        1, 0, None,
     ),
 ]
 
@@ -200,8 +189,8 @@ def _setup(conn: sqlite3.Connection) -> None:
     conn.executemany(
         """INSERT INTO query_registry
                (name, description, sql_text, parameters,
-                query_type, version, is_active, tags)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                version, is_active, tags)
+           VALUES (?, ?, ?, ?, ?, ?, ?)""",
         _REGISTRY_ROWS,
     )
     conn.commit()

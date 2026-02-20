@@ -18,7 +18,6 @@ class QueryRecord:
     description: str
     sql_text: str
     parameters: list[dict]
-    query_type: str
     version: int
     tags: str | None
 
@@ -30,7 +29,7 @@ def fetch_query(name: str) -> QueryRecord:
             cur.execute(
                 """
                 SELECT id, name, description, sql_text, parameters,
-                       query_type, version, tags
+                       version, tags
                 FROM query_registry
                 WHERE name = :name AND is_active = 1
                 FETCH FIRST 1 ROW ONLY
@@ -41,7 +40,7 @@ def fetch_query(name: str) -> QueryRecord:
             if row is None:
                 raise ValueError(f"No active query found with name: {name!r}")
 
-            id_, name_, desc, sql_lob, params_lob, query_type, version, tags = row
+            id_, name_, desc, sql_lob, params_lob, version, tags = row
             sql_text = _read_lob(sql_lob)
             params_raw = _read_lob(params_lob)
             parameters = json.loads(params_raw) if params_raw else []
@@ -52,7 +51,6 @@ def fetch_query(name: str) -> QueryRecord:
                 description=desc,
                 sql_text=sql_text,
                 parameters=parameters,
-                query_type=query_type,
                 version=version,
                 tags=tags,
             )

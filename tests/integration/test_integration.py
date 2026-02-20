@@ -30,7 +30,6 @@ class TestListQueriesIntegration:
             "get_employee_by_id",
             "list_by_department",
             "list_all_employees",
-            "update_department",
         }
 
     def test_each_entry_has_required_keys(self, registry):
@@ -40,11 +39,10 @@ class TestListQueriesIntegration:
     def test_tags_are_parsed_to_list(self, registry):
         results = {r["name"]: r for r in list_queries()}
         assert results["get_employee_by_id"]["tags"] == ["hr", "employees"]
-        assert results["update_department"]["tags"] == ["hr"]
+        assert results["list_all_employees"]["tags"] == ["hr"]
 
     def test_null_tags_returns_empty_list(self, registry):
-        # list_all_employees has tags; but no query currently has null tags in
-        # the active set — verify the inactive_query (null tags) is excluded
+        # inactive_query has null tags — verify it is excluded
         names = {r["name"] for r in list_queries()}
         assert "inactive_query" not in names
 
@@ -64,7 +62,6 @@ class TestListQueriesIntegration:
         names = {r["name"] for r in result}
         assert "get_employee_by_id" in names
         assert "list_by_department" in names
-        assert "update_department" not in names
         assert "list_all_employees" not in names
 
     def test_tag_filter_no_matches_returns_empty(self, registry):
@@ -75,8 +72,9 @@ class TestListQueriesIntegration:
         result = list_queries(tags="employees,hr")
         names = {r["name"] for r in result}
         # "hr" matches all active queries; "employees" matches get_ and list_by_
-        assert "update_department" in names
         assert "get_employee_by_id" in names
+        assert "list_by_department" in names
+        assert "list_all_employees" in names
 
 
 # ===========================================================================
@@ -89,7 +87,6 @@ class TestGetQueryIntegration:
         result = get_query("get_employee_by_id")
         assert result["name"] == "get_employee_by_id"
         assert result["description"] == "Fetch one employee by primary key"
-        assert result["query_type"] == "SELECT"
         assert result["version"] == 1
         assert "SELECT" in result["sql_text"]
 
@@ -98,7 +95,6 @@ class TestGetQueryIntegration:
         assert result["tags"] == ["hr", "employees"]
 
     def test_null_tags_returns_empty_list(self, registry):
-        # list_all_employees has tags; add a query with null tags via fixture conn
         result = get_query("list_all_employees")
         assert isinstance(result["tags"], list)
 
@@ -120,10 +116,6 @@ class TestGetQueryIntegration:
     def test_inactive_query_raises_value_error(self, registry):
         with pytest.raises(ValueError, match="No active query found"):
             get_query("inactive_query")
-
-    def test_dml_query_type_returned(self, registry):
-        result = get_query("update_department")
-        assert result["query_type"] == "DML"
 
 
 # ===========================================================================
@@ -187,45 +179,6 @@ class TestRunQuerySelectIntegration:
 
 
 # ===========================================================================
-# run_query — DML guard
-# ===========================================================================
-
-
-class TestRunQueryDmlIntegration:
-    def test_dml_without_flag_raises(self, registry):
-        with pytest.raises(ValueError, match="allow_dml=True"):
-            run_query("update_department", {"id": 1, "department": "Finance"})
-
-    def test_dml_without_flag_does_not_mutate_data(self, registry):
-        with pytest.raises(ValueError):
-            run_query("update_department", {"id": 1, "department": "Finance"})
-        # Alice should still be in Engineering
-        row = registry.execute(
-            "SELECT department FROM employees WHERE id = 1"
-        ).fetchone()
-        assert row[0] == "Engineering"
-
-    def test_dml_with_flag_executes_and_returns_empty(self, registry):
-        result = run_query(
-            "update_department",
-            {"id": 1, "department": "Finance"},
-            allow_dml=True,
-        )
-        assert result == []
-
-    def test_dml_with_flag_mutates_data(self, registry):
-        run_query(
-            "update_department",
-            {"id": 1, "department": "Finance"},
-            allow_dml=True,
-        )
-        row = registry.execute(
-            "SELECT department FROM employees WHERE id = 1"
-        ).fetchone()
-        assert row[0] == "Finance"
-
-
-# ===========================================================================
 # run_query — audit record
 # ===========================================================================
 
@@ -250,9 +203,9 @@ class TestRunQueryAuditIntegration:
         # Force a DB error by seeding a broken SQL query
         registry.execute(
             """INSERT INTO query_registry
-               (name, description, sql_text, parameters, query_type, version, is_active, tags)
+               (name, description, sql_text, parameters, version, is_active, tags)
                VALUES ('broken_query', 'bad sql', 'SELECT * FROM nonexistent_table',
-                       NULL, 'SELECT', 1, 1, NULL)"""
+                       NULL, 1, 1, NULL)"""
         )
         registry.commit()
 

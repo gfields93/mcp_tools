@@ -12,8 +12,7 @@ def get_query(name: str) -> dict:
         name: The query slug to look up.
 
     Returns:
-        Dict with keys: name, description, sql_text, parameters, query_type,
-        version, tags.
+        Dict with keys: name, description, sql_text, parameters, version, tags.
     """
     record = fetch_query(name)
     return {
@@ -21,7 +20,6 @@ def get_query(name: str) -> dict:
         "description": record.description,
         "sql_text": record.sql_text,
         "parameters": record.parameters,
-        "query_type": record.query_type,
         "version": record.version,
         "tags": [t.strip() for t in record.tags.split(",")] if record.tags else [],
     }

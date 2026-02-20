@@ -17,23 +17,8 @@ _SELECT_QUERY = QueryRecord(
     description="desc",
     sql_text="SELECT * FROM orders WHERE id = :id",
     parameters=[{"name": "id", "type": "NUMBER", "required": True}],
-    query_type="SELECT",
     version=2,
     tags="orders",
-)
-
-_DML_QUERY = QueryRecord(
-    id=2,
-    name="update_status",
-    description="desc",
-    sql_text="UPDATE orders SET status = :status WHERE id = :id",
-    parameters=[
-        {"name": "id", "type": "NUMBER", "required": True},
-        {"name": "status", "type": "VARCHAR2", "required": True},
-    ],
-    query_type="DML",
-    version=1,
-    tags=None,
 )
 
 
@@ -117,43 +102,6 @@ class TestRunQuerySuccess:
         cur = _make_cursor(["id"], [(1,)])
         _, _, mock_write, _ = _run_with_mocks(_SELECT_QUERY, cur, {"id": 1})
         mock_write.assert_called_once()
-
-
-# ---------------------------------------------------------------------------
-# DML guard
-# ---------------------------------------------------------------------------
-
-
-class TestRunQueryDmlGuard:
-    def test_dml_without_flag_raises_value_error(self):
-        cur = _make_cursor([], [])
-        with ExitStack() as stack:
-            stack.enter_context(
-                patch("tools.run_query.fetch_query", return_value=_DML_QUERY)
-            )
-            stack.enter_context(patch("tools.run_query.log_audit"))
-            stack.enter_context(patch("tools.run_query.write_audit_async"))
-            with pytest.raises(ValueError, match="allow_dml=True"):
-                run_query("update_status", {"id": 1, "status": "CLOSED"})
-
-    def test_dml_without_flag_does_not_touch_db(self):
-        with ExitStack() as stack:
-            stack.enter_context(
-                patch("tools.run_query.fetch_query", return_value=_DML_QUERY)
-            )
-            mock_conn = stack.enter_context(patch("tools.run_query.get_connection"))
-            stack.enter_context(patch("tools.run_query.log_audit"))
-            stack.enter_context(patch("tools.run_query.write_audit_async"))
-            with pytest.raises(ValueError):
-                run_query("update_status", {"id": 1, "status": "CLOSED"})
-        mock_conn.assert_not_called()
-
-    def test_dml_with_flag_executes_successfully(self):
-        cur = _make_cursor(["affected"], [(1,)])
-        result, _, _, _ = _run_with_mocks(
-            _DML_QUERY, cur, {"id": 1, "status": "CLOSED"}, allow_dml=True
-        )
-        assert result == [{"affected": 1}]
 
 
 # ---------------------------------------------------------------------------

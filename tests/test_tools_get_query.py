@@ -12,7 +12,6 @@ def _make_record(**overrides) -> QueryRecord:
         description="Returns all orders for a customer",
         sql_text="SELECT * FROM orders WHERE customer_id = :customer_id",
         parameters=[{"name": "customer_id", "type": "NUMBER", "required": True}],
-        query_type="SELECT",
         version=2,
         tags="finance,orders",
     )
@@ -29,7 +28,6 @@ class TestGetQuery:
             "description",
             "sql_text",
             "parameters",
-            "query_type",
             "version",
             "tags",
         }
@@ -45,7 +43,6 @@ class TestGetQuery:
         assert result["name"] == "my_query"
         assert result["description"] == "Returns all orders for a customer"
         assert result["sql_text"] == "SELECT * FROM orders WHERE customer_id = :customer_id"
-        assert result["query_type"] == "SELECT"
         assert result["version"] == 2
 
     def test_tags_string_split_into_list(self):
@@ -68,13 +65,6 @@ class TestGetQuery:
         with patch("tools.get_query.fetch_query", return_value=_make_record(parameters=params)):
             result = get_query("my_query")
         assert result["parameters"] == params
-
-    def test_dml_query_type_preserved(self):
-        with patch(
-            "tools.get_query.fetch_query", return_value=_make_record(query_type="DML")
-        ):
-            result = get_query("my_query")
-        assert result["query_type"] == "DML"
 
     def test_propagates_value_error_from_fetch(self):
         import pytest
