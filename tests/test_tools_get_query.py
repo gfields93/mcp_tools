@@ -26,7 +26,6 @@ class TestGetQuery:
         assert set(result.keys()) == {
             "name",
             "description",
-            "sql_text",
             "parameters",
             "version",
             "tags",
@@ -42,7 +41,6 @@ class TestGetQuery:
             result = get_query("my_query")
         assert result["name"] == "my_query"
         assert result["description"] == "Returns all orders for a customer"
-        assert result["sql_text"] == "SELECT * FROM orders WHERE customer_id = :customer_id"
         assert result["version"] == 2
 
     def test_tags_string_split_into_list(self):

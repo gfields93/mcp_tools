@@ -88,7 +88,6 @@ class TestGetQueryIntegration:
         assert result["name"] == "get_employee_by_id"
         assert result["description"] == "Fetch one employee by primary key"
         assert result["version"] == 1
-        assert "SELECT" in result["sql_text"]
 
     def test_tags_parsed_to_list(self, registry):
         result = get_query("get_employee_by_id")
