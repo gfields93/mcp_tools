@@ -21,6 +21,7 @@ env/
 htmlcov/
 .coverage
 coverage.xml
+test-results.xml
 
 # Editor
 .vscode/
@@ -37,3 +38,8 @@ audit.log.*
 
 # Windows alternate data streams
 *.Zone.Identifier
+.claude/settings.local.json
+.~lock.oracle_mcp_query_registry_design.docx#
+VLS_OUTSTANDING.sql
+VLS_DEAL.sql
+VLS_FACILITY.sql

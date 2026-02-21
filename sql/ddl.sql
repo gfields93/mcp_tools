@@ -13,6 +13,7 @@ CREATE TABLE query_registry (
     description VARCHAR2(1000) NOT NULL,
     sql_text    CLOB           NOT NULL,
     parameters  CLOB           CHECK (parameters IS NULL OR parameters IS JSON),
+    return_values CLOB         CHECK (return_values IS NULL OR return_values IS JSON),
     version     NUMBER         DEFAULT 1 NOT NULL,
     is_active   NUMBER(1)      DEFAULT 1 CHECK (is_active IN (0, 1)),
     tags        VARCHAR2(500),

@@ -69,8 +69,9 @@ class TestFetchQuery:
             "id": 1,
             "name": "my_query",
             "desc": "A test query",
-            "sql_text": "SELECT * FROM t WHERE id = :id",
+            "sql_text": "SELECT id, name FROM t WHERE id = :id",
             "params": json.dumps([{"name": "id", "type": "NUMBER"}]),
+            "return_values": None,
             "version": 2,
             "tags": "finance,orders",
         }
@@ -81,6 +82,7 @@ class TestFetchQuery:
             defaults["desc"],
             defaults["sql_text"],
             defaults["params"],
+            defaults["return_values"],
             defaults["version"],
             defaults["tags"],
         )
@@ -97,7 +99,7 @@ class TestFetchQuery:
             result = fetch_query("my_query")
         assert result.name == "my_query"
         assert result.description == "A test query"
-        assert result.sql_text == "SELECT * FROM t WHERE id = :id"
+        assert result.sql_text == "SELECT id, name FROM t WHERE id = :id"
         assert result.parameters == [{"name": "id", "type": "NUMBER"}]
         assert result.version == 2
         assert result.tags == "finance,orders"
@@ -145,10 +147,10 @@ class TestFetchQuery:
 
 
 class TestFetchAllQueries:
-    def _row(self, name="q1", desc="desc1", params=None, tags="orders,finance"):
+    def _row(self, name="q1", desc="desc1", params=None, return_values=None, tags="orders,finance"):
         if params is None:
             params = json.dumps([{"name": "id"}])
-        return (name, desc, params, tags)
+        return (name, desc, params, return_values, tags)
 
     def test_returns_list_of_dicts(self):
         cur = _make_cursor(fetchall=[self._row()])
@@ -161,7 +163,7 @@ class TestFetchAllQueries:
         cur = _make_cursor(fetchall=[self._row()])
         with patch("db.registry.get_connection", return_value=_make_conn(cur)):
             result = fetch_all_queries()
-        assert set(result[0].keys()) == {"name", "description", "tags", "parameters"}
+        assert set(result[0].keys()) == {"name", "description", "tags", "parameters", "return_values"}
 
     def test_tags_split_into_list(self):
         cur = _make_cursor(fetchall=[self._row(tags="orders,finance")])
@@ -177,7 +179,7 @@ class TestFetchAllQueries:
 
     def test_null_params_becomes_empty_list(self):
         # Construct the row tuple directly so params is truly None
-        cur = _make_cursor(fetchall=[("q1", "desc1", None, "orders")])
+        cur = _make_cursor(fetchall=[("q1", "desc1", None, None, "orders")])
         with patch("db.registry.get_connection", return_value=_make_conn(cur)):
             result = fetch_all_queries()
         assert result[0]["parameters"] == []

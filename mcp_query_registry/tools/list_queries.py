@@ -14,6 +14,6 @@ def list_queries(tags: str | None = None) -> list[dict]:
               matching at least one of the supplied tags are returned.
 
     Returns:
-        List of query summaries with keys: name, description, tags, parameters.
+        List of query summaries with keys: name, description, tags, parameters, return_values.
     """
     return fetch_all_queries(tags=tags)

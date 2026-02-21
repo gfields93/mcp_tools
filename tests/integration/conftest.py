@@ -107,14 +107,15 @@ class SQLiteConnAdapter:
 
 _SCHEMA_SQL = """
 CREATE TABLE query_registry (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    name        TEXT    NOT NULL,
-    description TEXT    NOT NULL,
-    sql_text    TEXT    NOT NULL,
-    parameters  TEXT,
-    version     INTEGER DEFAULT 1 NOT NULL,
-    is_active   INTEGER DEFAULT 1,
-    tags        TEXT
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    name          TEXT    NOT NULL,
+    description   TEXT    NOT NULL,
+    sql_text      TEXT    NOT NULL,
+    parameters    TEXT,
+    return_values TEXT,
+    version       INTEGER DEFAULT 1 NOT NULL,
+    is_active     INTEGER DEFAULT 1,
+    tags          TEXT
 );
 
 CREATE TABLE query_audit_log (
@@ -144,12 +145,19 @@ _EMPLOYEES = [
     (3, "Carol", "Engineering"),
 ]
 
+_EMPLOYEE_COLS = json.dumps([
+    {"name": "id",         "type": "NUMBER",   "description": "Employee primary key"},
+    {"name": "name",       "type": "VARCHAR2", "description": "Employee full name"},
+    {"name": "department", "type": "VARCHAR2", "description": "Department name"},
+])
+
 _REGISTRY_ROWS = [
     (
         "get_employee_by_id",
         "Fetch one employee by primary key",
         "SELECT id, name, department FROM employees WHERE id = :id",
         json.dumps([{"name": "id", "type": "NUMBER", "required": True}]),
+        _EMPLOYEE_COLS,
         1, 1, "hr,employees",
     ),
     (
@@ -164,6 +172,10 @@ _REGISTRY_ROWS = [
                 "allowed_values": ["Engineering", "Finance"],
             }
         ]),
+        json.dumps([
+            {"name": "id",   "type": "NUMBER",   "description": "Employee primary key"},
+            {"name": "name", "type": "VARCHAR2", "description": "Employee full name"},
+        ]),
         1, 1, "hr,employees",
     ),
     (
@@ -171,6 +183,7 @@ _REGISTRY_ROWS = [
         "Return every employee — no parameters required",
         "SELECT id, name, department FROM employees ORDER BY id",
         None,
+        _EMPLOYEE_COLS,
         1, 1, "hr",
     ),
     (
@@ -185,12 +198,14 @@ _REGISTRY_ROWS = [
                 "allowed_values": ["Engineering", "Finance"],
             }
         ]),
+        _EMPLOYEE_COLS,
         1, 1, "hr,employees",
     ),
     (
         "inactive_query",
         "Retired query — should never be visible",
         "SELECT 1",
+        None,
         None,
         1, 0, None,
     ),
@@ -202,9 +217,9 @@ def _setup(conn: sqlite3.Connection) -> None:
     conn.executemany("INSERT INTO employees VALUES (?, ?, ?)", _EMPLOYEES)
     conn.executemany(
         """INSERT INTO query_registry
-               (name, description, sql_text, parameters,
+               (name, description, sql_text, parameters, return_values,
                 version, is_active, tags)
-           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
         _REGISTRY_ROWS,
     )
     conn.commit()

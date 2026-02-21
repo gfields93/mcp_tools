@@ -10,8 +10,9 @@ def _make_record(**overrides) -> QueryRecord:
         id=1,
         name="my_query",
         description="Returns all orders for a customer",
-        sql_text="SELECT * FROM orders WHERE customer_id = :customer_id",
+        sql_text="SELECT order_id, customer_id, amount FROM orders WHERE customer_id = :customer_id",
         parameters=[{"name": "customer_id", "type": "NUMBER", "required": True}],
+        return_values=[{"name": "order_id", "type": "NUMBER", "description": "Order PK"}],
         version=2,
         tags="finance,orders",
     )
@@ -27,6 +28,7 @@ class TestGetQuery:
             "name",
             "description",
             "parameters",
+            "return_values",
             "version",
             "tags",
         }
@@ -63,6 +65,12 @@ class TestGetQuery:
         with patch("tools.get_query.fetch_query", return_value=_make_record(parameters=params)):
             result = get_query("my_query")
         assert result["parameters"] == params
+
+    def test_return_values_included_unchanged(self):
+        rv = [{"name": "total", "type": "NUMBER", "description": "Sum of amounts"}]
+        with patch("tools.get_query.fetch_query", return_value=_make_record(return_values=rv)):
+            result = get_query("my_query")
+        assert result["return_values"] == rv
 
     def test_propagates_value_error_from_fetch(self):
         import pytest
