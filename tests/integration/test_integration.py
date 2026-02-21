@@ -35,7 +35,7 @@ class TestListQueriesIntegration:
 
     def test_each_entry_has_required_keys(self, registry):
         for entry in list_queries():
-            assert {"name", "description", "tags", "parameters"} <= entry.keys()
+            assert {"name", "description", "tags", "parameters", "return_values"} <= entry.keys()
 
     def test_tags_are_parsed_to_list(self, registry):
         results = {r["name"]: r for r in list_queries()}
@@ -108,6 +108,13 @@ class TestGetQueryIntegration:
     def test_no_params_query_returns_empty_list(self, registry):
         result = get_query("list_all_employees")
         assert result["parameters"] == []
+
+    def test_return_values_deserialised_from_json(self, registry):
+        result = get_query("get_employee_by_id")
+        rv = result["return_values"]
+        assert isinstance(rv, list)
+        assert rv[0]["name"] == "id"
+        assert rv[0]["type"] == "NUMBER"
 
     def test_not_found_raises_value_error(self, registry):
         with pytest.raises(ValueError, match="No active query found"):
@@ -204,7 +211,7 @@ class TestRunQueryAuditIntegration:
         registry.execute(
             """INSERT INTO query_registry
                (name, description, sql_text, parameters, version, is_active, tags)
-               VALUES ('broken_query', 'bad sql', 'SELECT * FROM nonexistent_table',
+               VALUES ('broken_query', 'bad sql', 'SELECT id FROM nonexistent_table',
                        NULL, 1, 1, NULL)"""
         )
         registry.commit()

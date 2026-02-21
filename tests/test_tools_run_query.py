@@ -15,8 +15,9 @@ _SELECT_QUERY = QueryRecord(
     id=1,
     name="get_orders",
     description="desc",
-    sql_text="SELECT * FROM orders WHERE id = :id",
+    sql_text="SELECT id, customer_id, amount FROM orders WHERE id = :id",
     parameters=[{"name": "id", "type": "NUMBER", "required": True}],
+    return_values=[],
     version=2,
     tags="orders",
 )

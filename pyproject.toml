@@ -35,6 +35,7 @@ addopts = [
     "--cov=mcp_query_registry",
     "--cov-report=term-missing",
     "--cov-report=html:htmlcov",
+    "--junit-xml=test-results.xml",
     "-v",
 ]
 
