@@ -174,6 +174,20 @@ _REGISTRY_ROWS = [
         1, 1, "hr",
     ),
     (
+        "list_employees_optional_dept",
+        "List employees with an optional department filter",
+        "SELECT id, name, department FROM employees/*[ WHERE department = :department]*/ ORDER BY id",
+        json.dumps([
+            {
+                "name": "department",
+                "type": "VARCHAR2",
+                "required": False,
+                "allowed_values": ["Engineering", "Finance"],
+            }
+        ]),
+        1, 1, "hr,employees",
+    ),
+    (
         "inactive_query",
         "Retired query — should never be visible",
         "SELECT 1",

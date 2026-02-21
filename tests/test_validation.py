@@ -141,9 +141,15 @@ class TestValidateAndBind:
         defs = [{"name": "status", "type": "VARCHAR2", "required": False, "default": "OPEN"}]
         assert validate_and_bind(defs, {}) == {"status": "OPEN"}
 
-    def test_optional_without_default_absent_from_result(self):
+    def test_optional_without_default_bound_as_none(self):
+        # Optional params with no default are bound as None to enable the
+        # Oracle NULL-bypass pattern: (:param IS NULL OR col = :param)
         defs = [{"name": "status", "type": "VARCHAR2", "required": False}]
-        assert validate_and_bind(defs, {}) == {}
+        assert validate_and_bind(defs, {}) == {"status": None}
+
+    def test_optional_without_default_provided_value_is_bound(self):
+        defs = [{"name": "status", "type": "VARCHAR2", "required": False}]
+        assert validate_and_bind(defs, {"status": "OPEN"}) == {"status": "OPEN"}
 
     def test_allowed_values_accepted(self):
         defs = [

@@ -8,6 +8,7 @@ from config import settings
 from db.connection import get_connection
 from db.registry import fetch_query
 from validation.parameters import validate_and_bind
+from validation.sql_template import render_sql
 
 
 def run_query(
@@ -46,7 +47,7 @@ def run_query(
     try:
         with get_connection() as conn:
             with conn.cursor() as cur:
-                cur.execute(query.sql_text, bind_dict)
+                cur.execute(render_sql(query.sql_text, bind_dict), bind_dict)
                 cols = [col[0] for col in cur.description]
                 effective_limit = min(max_rows, settings.hard_max_rows)
                 rows = cur.fetchmany(effective_limit)

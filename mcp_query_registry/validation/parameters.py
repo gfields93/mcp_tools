@@ -74,8 +74,7 @@ def validate_and_bind(param_definitions: list[dict], provided: dict) -> dict:
         if name not in provided:
             if required:
                 raise ValueError(f"Missing required parameter: '{name}'")
-            if default is not None:
-                bound[name] = default
+            bound[name] = default  # None when no default — enables NULL-bypass pattern
             continue
 
         value = _coerce(name, provided[name], oracle_type)

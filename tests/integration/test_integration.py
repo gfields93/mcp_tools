@@ -30,6 +30,7 @@ class TestListQueriesIntegration:
             "get_employee_by_id",
             "list_by_department",
             "list_all_employees",
+            "list_employees_optional_dept",
         }
 
     def test_each_entry_has_required_keys(self, registry):
@@ -221,3 +222,30 @@ class TestRunQueryAuditIntegration:
             run_query("list_all_employees", {})
         record = mock_log.call_args[0][0]
         assert record.duration_ms >= 0
+
+
+# ===========================================================================
+# run_query — dynamic query (template blocks + NULL-bypass)
+# ===========================================================================
+
+
+class TestRunQueryDynamicIntegration:
+    def test_optional_param_omitted_returns_all_rows(self, registry):
+        # No department supplied → template block stripped → all employees returned
+        result = run_query("list_employees_optional_dept", {})
+        assert len(result) == 3
+
+    def test_optional_param_supplied_filters_rows(self, registry):
+        result = run_query("list_employees_optional_dept", {"department": "Engineering"})
+        assert len(result) == 2
+        names = {r["name"] for r in result}
+        assert names == {"Alice", "Carol"}
+
+    def test_optional_param_finance_filters_rows(self, registry):
+        result = run_query("list_employees_optional_dept", {"department": "Finance"})
+        assert len(result) == 1
+        assert result[0]["name"] == "Bob"
+
+    def test_optional_param_invalid_value_raises(self, registry):
+        with pytest.raises(ValueError, match="must be one of"):
+            run_query("list_employees_optional_dept", {"department": "Marketing"})
