@@ -32,6 +32,9 @@ test-results.xml
 .DS_Store
 Thumbs.db
 
+# Sample queries (local only — never commit)
+sql/sample_queries.sql
+
 # Audit log
 audit.log
 audit.log.*
